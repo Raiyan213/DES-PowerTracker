@@ -75,15 +75,14 @@
     <!-- MAIN INTERFACE CONTAINER -->
     <div class="max-w-7xl mx-auto space-y-6">
         
-        <!-- HEADER SECTION (V15 FIXED DUAL-ROW LAYOUT) -->
+        <!-- HEADER SECTION -->
         <div class="premium-card rounded-2xl p-5 sm:p-6 shadow-xl border border-gray-800/60 space-y-5">
             
-            <!-- Row 1: Dedicated Branding Row (Centered on Mobile, Left-aligned on PC) -->
+            <!-- Row 1: Dedicated Branding Row -->
             <div class="text-center sm:text-left border-b border-gray-800/60 pb-4 space-y-1">
                 <div>
                     <span class="px-3 py-1 text-[10px] font-semibold text-amber-400 bg-amber-950/40 rounded-full border border-amber-900/30 tracking-wider uppercase">DES Brunei Analytics</span>
                 </div>
-                <!-- Kunci susunan kilat dan teks menggunakan flex-row inline supaya rata air-level -->
                 <div class="flex items-center justify-center sm:justify-start gap-1.5 pt-1">
                     <span class="text-xl sm:text-2xl text-amber-400 select-none leading-none">⚡</span>
                     <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white leading-none">DES PowerTracker</h1>
@@ -92,7 +91,7 @@
                 <p class="text-xs text-gray-400 font-medium tracking-wide pt-0.5">Track, Estimate, Save Electricity</p>
             </div>
             
-            <!-- Row 2: Controls & Filters (Stacked on Mobile, Row-aligned on PC) -->
+            <!-- Row 2: Controls & Filters -->
             <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
                 
                 <!-- Kumpulan Kiri: Navigasi Penapis & Cetakan Laporan -->
@@ -317,6 +316,7 @@
             </table>
         </div>
 
+        <!-- FIXED CONTAINER UNTUK GRAF PDF -->
         <div id="pdfGraphSection" style="margin-top: 15px;">
             <h4 style="font-size: 14px; margin-bottom: 5px;">Graf Analisis Penggunaan Kuasa Harian (kWh):</h4>
             <div style="text-align: center; width: 100%;">
@@ -429,7 +429,7 @@
                 alert("Tiada data elektrik untuk di-backup bro."); return;
             }
             const backupPackage = {
-                version: "DES_v15_Final_Fixed",
+                version: "DES_v16_NoGraph_PDF",
                 timestamp: new Date().toISOString(),
                 records: electricityRecords,
                 firstTimeStatus: localStorage.getItem('des_tracker_first_time')
@@ -700,7 +700,8 @@
             let filename = "DES-Electricity-Report";
 
             if (mode === 'single') {
-                document.getElementById('pdfGraphSection').style.display = 'block';
+                // DIUBAH: Sembunyikan bahagian graf khusus untuk cetakan Bulan Semasa
+                document.getElementById('pdfGraphSection').style.display = 'none';
                 document.getElementById('pdfThBlock').style.display = 'table-cell';
                 document.getElementById('pdfThDate').innerText = "Tarikh";
                 document.getElementById('pdfTableTitle').innerText = "Pecahan Data Harian:";
@@ -710,7 +711,6 @@
                 filteredRecords.sort((a, b) => new Date(a.date) - new Date(b.date));
 
                 if(filteredRecords.length === 0) { alert('Tiada data direkodkan pada bulan ini untuk dicetak.'); return; }
-                document.getElementById('pdfGraphImage').src = usageChart.toBase64Image();
 
                 let cumulativeKwh = 0;
                 filteredRecords.forEach(r => {
@@ -739,7 +739,7 @@
                     `;
                     totalKosSemua += kosHariIni;
                 });
-                totalKuasaSemua = cumulativeKwh; totalHariMuat = filteredRecords.length;
+                totalKuasaSemua = cumulativeKwh; totalHariSemua = filteredRecords.length;
                 filename = `DES-PowerTracker-Report-${selectedMonth}.pdf`;
                 const dateObj = new Date(selectedMonth + "-02");
                 document.getElementById('pdfMetaBulan').innerText = `Laporan Bulan: ${dateObj.toLocaleString('ms-BN', { month: 'long', year: 'numeric' })}`;
