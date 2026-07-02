@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡DES PowerTracker ⚡ | Track, Estimate, Save Electricity</title>
+    <!-- Dynamic Favicon using Lightning Bolt Emoji -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- html2pdf.js for Premium PDF Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0b0f19;
+        }
+        .premium-card {
+            background: linear-gradient(145deg, #111827, #1f2937);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        /* Efek Neon Glow untuk Blok yang Aktif */
+        .glow-active-b1 { box-shadow: 0 0 15px rgba(34, 211, 238, 0.25); border-color: rgba(34, 211, 238, 0.6) !important; }
+        .glow-active-b2 { box-shadow: 0 0 15px rgba(251, 191, 36, 0.25); border-color: rgba(251, 191, 36, 0.6) !important; }
+        .glow-active-b3 { box-shadow: 0 0 15px rgba(249, 115, 22, 0.25); border-color: rgba(249, 115, 22, 0.6) !important; }
+        .glow-active-b4 { box-shadow: 0 0 15px rgba(239, 68, 68, 0.25); border-color: rgba(239, 68, 68, 0.6) !important; }
+    </style>
+</head>
+<body class="text-gray-100 min-h-screen p-4 sm:p-8">
+
+    <!-- Welcome Page / First-Time User Modal -->
+    <div id="welcomeModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="premium-card max-w-2xl w-full rounded-2xl p-6 sm:p-8 border border-cyan-500/20 shadow-2xl relative space-y-6">
+            <div class="text-center space-y-2">
+                <span class="px-3 py-1 text-[10px] font-bold text-cyan-400 bg-cyan-950/60 rounded-full border border-cyan-800/40 tracking-wider uppercase">Selamat Datang</span>
+                <h2 class="text-2xl font-bold bg-gradient-to-r text-transparent bg-clip-text from-white to-cyan-400">⚡DES PowerTracker ⚡</h2>
+                <p class="text-gray-400 text-xs italic tracking-wide">Track, Estimate, Save Electricity</p>
+            </div>
+
+            <!-- Steps Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                <div class="bg-gray-900/60 border border-gray-800 p-4 rounded-xl space-y-2">
+                    <div class="w-7 h-7 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-400 font-bold border border-cyan-500/20">1</div>
+                    <h4 class="font-bold text-gray-200">Isi Data Harian</h4>
+                    <p class="text-gray-400 leading-relaxed">Masukkan Tarikh and nilai kWh harian elektrik rumah biskita melalui borang Data Entry.</p>
+                </div>
+                <div class="bg-gray-900/60 border border-gray-800 p-4 rounded-xl space-y-2">
+                    <div class="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 font-bold border border-emerald-500/20">2</div>
+                    <h4 class="font-bold text-gray-200">Live Tariff Glow</h4>
+                    <p class="text-gray-400 leading-relaxed">Sistem otomatis mengira kuota. Kotak blok yang tengah aktif msani akan menyala glowing neon.</p>
+                </div>
+                <div class="bg-gray-900/60 border border-gray-800 p-4 rounded-xl space-y-2">
+                    <div class="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400 font-bold border border-amber-500/20">3</div>
+                    <h4 class="font-bold text-gray-200">Import & Cetak</h4>
+                    <p class="text-gray-400 leading-relaxed">Boleh bulk import dari Google Sheets via .csv and cetak laporan PDF (Bulanan/Tempoh Custom).</p>
+                </div>
+            </div>
+
+            <div class="p-3 bg-gray-950 border border-gray-800 rounded-xl flex items-start gap-2.5 text-xs text-gray-400">
+                <svg class="w-4 h-4 text-cyan-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <p>💡 **Tip Pindah Phone:** Guna butang **Backup Data** di bahagian atas untuk membawa semua rekod elektrik biskita ke telefon pintar yang baru!</p>
+            </div>
+
+            <div class="text-center pt-2">
+                <button id="closeWelcomeBtn" class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold py-2.5 px-8 rounded-xl transition-all shadow-lg text-xs tracking-wide">
+                    Selesai & Mula Memakai
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN INTERFACE CONTAINER -->
+    <div class="max-w-7xl mx-auto space-y-6">
+        
+        <!-- HEADER SECTION (V15 FIXED DUAL-ROW LAYOUT) -->
+        <div class="premium-card rounded-2xl p-5 sm:p-6 shadow-xl border border-gray-800/60 space-y-5">
+            
+            <!-- Row 1: Dedicated Branding Row (Centered on Mobile, Left-aligned on PC) -->
+            <div class="text-center sm:text-left border-b border-gray-800/60 pb-4 space-y-1">
+                <div>
+                    <span class="px-3 py-1 text-[10px] font-semibold text-amber-400 bg-amber-950/40 rounded-full border border-amber-900/30 tracking-wider uppercase">DES Brunei Analytics</span>
+                </div>
+                <!-- Kunci susunan kilat dan teks menggunakan flex-row inline supaya rata air-level -->
+                <div class="flex items-center justify-center sm:justify-start gap-1.5 pt-1">
+                    <span class="text-xl sm:text-2xl text-amber-400 select-none leading-none">⚡</span>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white leading-none">DES PowerTracker</h1>
+                    <span class="text-xl sm:text-2xl text-amber-400 select-none leading-none">⚡</span>
+                </div>
+                <p class="text-xs text-gray-400 font-medium tracking-wide pt-0.5">Track, Estimate, Save Electricity</p>
+            </div>
+            
+            <!-- Row 2: Controls & Filters (Stacked on Mobile, Row-aligned on PC) -->
+            <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+                
+                <!-- Kumpulan Kiri: Navigasi Penapis & Cetakan Laporan -->
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full xl:w-auto">
+                    <!-- Dashboard Month Filter -->
+                    <div class="bg-gray-950/60 border border-gray-800 rounded-xl px-3 py-2 flex items-center justify-between sm:justify-start gap-2 text-xs sm:w-auto w-full">
+                        <span class="text-gray-400 font-medium uppercase tracking-wider">Pilih Bulan:</span>
+                        <input type="month" id="monthFilter" class="bg-transparent font-semibold text-cyan-400 focus:outline-none cursor-pointer text-right sm:text-left">
+                    </div>
+
+                    <!-- PDF Export Setup -->
+                    <div class="flex flex-col sm:flex-row items-stretch gap-2 bg-gray-950/40 p-1 rounded-xl border border-gray-800/40 w-full sm:w-auto">
+                        <div class="bg-transparent px-3 py-1.5 flex items-center justify-between sm:justify-start gap-2 text-xs">
+                            <span class="text-gray-400 font-medium uppercase tracking-wider">Cetak PDF:</span>
+                            <select id="pdfExportMode" class="bg-transparent font-semibold text-emerald-400 focus:outline-none cursor-pointer text-right sm:text-left">
+                                <option value="single" class="bg-gray-950 text-white">Bulan Semasa</option>
+                                <option value="range" class="bg-gray-950 text-white">Tempoh Bulan (Custom)</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Custom Range Inputs -->
+                        <div id="pdfRangeInputs" class="hidden flex items-center justify-center gap-1 bg-gray-900 px-2 py-1 rounded-lg border border-gray-800 text-xs">
+                            <input type="month" id="pdfStartMonth" class="bg-transparent font-semibold text-gray-300 focus:outline-none cursor-pointer w-24">
+                            <span class="text-[10px] text-gray-500 uppercase px-0.5">to</span>
+                            <input type="month" id="pdfEndMonth" class="bg-transparent font-semibold text-gray-300 focus:outline-none cursor-pointer w-24">
+                        </div>
+
+                        <button id="exportPdfBtn" class="flex items-center justify-center gap-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-medium py-2 px-4 rounded-lg transition-all shadow-md text-xs">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            Save PDF
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Kumpulan Kanan: Semua Utiliti Reka Bentuk Seragam -->
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full xl:w-auto text-xs">
+                    
+                    <!-- Import CSV Button -->
+                    <input type="file" id="csvFileInput" accept=".csv" class="hidden">
+                    <button id="importCsvBtn" class="bg-gray-950/60 hover:bg-gray-900 text-gray-300 font-medium py-2 px-3.5 rounded-xl border border-gray-800 hover:border-cyan-500/40 transition-all flex items-center justify-center gap-1.5 shadow-sm w-full sm:w-auto">
+                        <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        Import Sheets (.csv)
+                    </button>
+
+                    <!-- Backup Button -->
+                    <button id="backupBtn" class="bg-gray-950/60 hover:bg-gray-900 text-gray-300 font-medium py-2 px-3.5 rounded-xl border border-gray-800 hover:border-amber-500/40 transition-all flex items-center justify-center gap-1.5 shadow-sm w-full sm:w-auto">
+                        <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 00-2 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                        Backup Data
+                    </button>
+                    
+                    <!-- Restore Button -->
+                    <input type="file" id="jsonFileInput" accept=".json" class="hidden">
+                    <button id="restoreBtn" class="bg-gray-950/60 hover:bg-gray-900 text-gray-300 font-medium py-2 px-3.5 rounded-xl border border-gray-800 hover:border-emerald-500/40 transition-all flex items-center justify-center gap-1.5 shadow-sm w-full sm:w-auto">
+                        <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                        Restore Data
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Main Dashboard Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Left Grid: Entry Form & Stats -->
+            <div class="lg:col-span-4 space-y-6">
+                <!-- Input Form -->
+                <div class="premium-card rounded-2xl p-6 shadow-xl">
+                    <h2 class="text-md font-semibold text-white mb-4 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-cyan-400"></span> Data Entry
+                    </h2>
+                    <form id="trackerForm" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Tarikh Rekod</label>
+                            <input type="date" id="inputDate" required class="block w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 text-white text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Penggunaan Kuasa</label>
+                            <div class="relative">
+                                <input type="number" id="inputKwh" step="any" placeholder="0.000" required class="block w-full pl-4 pr-12 py-3 bg-gray-900 border border-gray-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 text-white font-semibold">
+                                <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-gray-500 text-sm">kWh</div>
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-medium py-3 px-4 rounded-xl transition-all text-sm">
+                            Simpan Rekod Harian
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Monthly Summary Stats Dashboard -->
+                <div class="bg-gradient-to-br from-cyan-950/20 to-slate-900 border border-cyan-500/10 rounded-2xl p-6">
+                    <h3 class="text-xs font-bold text-cyan-400 uppercase tracking-wider mb-4" id="statsTitle">Rumusan Bulanan</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-xs text-gray-400">Total Kuasa (Bulan Ini)</p>
+                            <p class="text-2xl font-bold text-white mt-1" id="monthlyTotalKwh">0.000 <span class="text-xs text-gray-400 font-normal">kWh</span></p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400">Total Kos Bulanan</p>
+                            <p class="text-2xl font-bold text-emerald-400 mt-1" id="monthlyTotalCost">BND $0.00</p>
+                        </div>
+                    </div>
+                    <div class="border-t border-gray-800 mt-4 pt-4">
+                        <p class="text-xs text-gray-400">Purata Kuasa / Hari: <span class="text-white font-semibold" id="monthlyAvgKwh">0.000 kWh</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Grid: Tariff Reference (Top), Tabs, Graph & Table View -->
+            <div class="lg:col-span-8 space-y-6">
+                
+                <!-- Rujukan Struktur Tarif DES Brunei -->
+                <div class="premium-card rounded-2xl p-5 shadow-xl space-y-3">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center justify-between">
+                        <span>Rujukan & Live Kuota Tarif DES Brunei</span>
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                        <!-- Blok 1 -->
+                        <div id="cardB1" class="p-3 rounded-lg bg-gray-900 border border-gray-800 transition-all duration-300 flex flex-col justify-between h-full">
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="font-semibold text-cyan-400 flex items-center gap-1">
+                                    Blok 1 <span id="tagB1" class="hidden text-[9px] bg-cyan-900/80 text-cyan-300 px-1 rounded animate-pulse">ACTIVE</span>
+                                </span>
+                                <span class="font-bold text-cyan-300">$0.01</span>
+                            </div>
+                            <p class="text-gray-400 text-[11px]" id="liveB1Usage">Digunakan: 0.0 / 600.0 kWh</p>
+                        </div>
+                        <!-- Blok 2 -->
+                        <div id="cardB2" class="p-3 rounded-lg bg-gray-900 border border-gray-800 transition-all duration-300 flex flex-col justify-between h-full">
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="font-semibold text-amber-400 flex items-center gap-1">
+                                    Blok 2 <span id="tagB2" class="hidden text-[9px] bg-amber-900/80 text-amber-300 px-1 rounded animate-pulse">ACTIVE</span>
+                                </span>
+                                <span class="font-bold text-amber-300">$0.08</span>
+                            </div>
+                            <p class="text-gray-400 text-[11px]" id="liveB2Usage">Digunakan: 0.0 / 1400.0 kWh</p>
+                        </div>
+                        <!-- Blok 3 -->
+                        <div id="cardB3" class="p-3 rounded-lg bg-gray-900 border border-gray-800 transition-all duration-300 flex flex-col justify-between h-full">
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="font-semibold text-orange-400 flex items-center gap-1">
+                                    Blok 3 <span id="tagB3" class="hidden text-[9px] bg-orange-900/80 text-orange-300 px-1 rounded animate-pulse">ACTIVE</span>
+                                </span>
+                                <span class="font-bold text-orange-300">$0.10</span>
+                            </div>
+                            <p class="text-gray-400 text-[11px]" id="liveB3Usage">Digunakan: 0.0 / 2000.0 kWh</p>
+                        </div>
+                        <!-- Blok 4 -->
+                        <div id="cardB4" class="p-3 rounded-lg bg-gray-900 border border-gray-800 transition-all duration-300 flex flex-col justify-between h-full">
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="font-semibold text-red-400 flex items-center gap-1">
+                                    Blok 4 <span id="tagB4" class="hidden text-[9px] bg-red-900/80 text-red-300 px-1 rounded animate-pulse">ACTIVE</span>
+                                </span>
+                                <span class="font-bold text-red-300">$0.12</span>
+                            </div>
+                            <p class="text-gray-400 text-[11px]" id="liveB4Usage">Digunakan: 0.0 kWh</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs -->
+                <div class="flex border-b border-gray-800">
+                    <button id="tabGraph" class="px-6 py-3 border-b-2 border-cyan-400 text-cyan-400 font-medium text-sm focus:outline-none">Graph Analytics</button>
+                    <button id="tabData" class="px-6 py-3 border-b-2 border-transparent text-gray-400 hover:text-gray-200 font-medium text-sm focus:outline-none">Detailed Data View</button>
+                </div>
+
+                <!-- Graph Section Container -->
+                <div id="graphContainer" class="premium-card rounded-2xl p-6 shadow-xl">
+                    <div class="relative h-72 w-full">
+                        <canvas id="usageChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Detailed Data View Section -->
+                <div id="dataContainer" class="premium-card rounded-2xl overflow-hidden shadow-xl hidden">
+                    <div class="p-4 bg-gray-900/60 border-b border-gray-800 flex justify-between items-center">
+                        <h3 class="text-sm font-semibold text-gray-300">Log Rekod Simpanan & Info Blok Tariff</h3>
+                        <button id="clearDataBtn" class="text-xs text-red-400 hover:text-red-300 font-medium px-3 py-1 bg-red-950/30 border border-red-900/50 rounded-lg transition-all">Clear All Data</button>
+                    </div>
+                    <div class="overflow-x-auto max-h-[600px] scrollbar-thin scrollbar-thumb-gray-700">
+                        <table class="min-w-full divide-y divide-gray-800">
+                            <thead class="bg-gray-900/40 text-xs text-gray-400 uppercase sticky top-0 backdrop-blur-md z-10">
+                                <tr>
+                                    <th class="px-6 py-3 text-left font-semibold">Tarikh</th>
+                                    <th class="px-6 py-3 text-right font-semibold">Penggunaan Harian</th>
+                                    <th class="px-6 py-3 text-center font-semibold">Status & Kadar Blok DES</th>
+                                    <th class="px-6 py-3 text-right font-semibold">Kos Hari Ani (BND)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dataTableBody" class="divide-y divide-gray-800/60 text-sm text-gray-300">
+                                <!-- Dynamic rows via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Template for PDF Printing Only -->
+    <div id="pdfTemplate" class="hidden text-black p-8 bg-white space-y-6" style="font-family: Arial, sans-serif;">
+        <div style="border-b: 2px solid #333; padding-bottom: 12px; margin-bottom: 15px;">
+            <h1 style="font-size: 24px; font-weight: bold; margin: 0;">⚡DES PowerTracker ⚡</h1>
+            <p style="color: #666; font-size: 11px; margin-top: 4px; font-style: italic;">Track, Estimate, Save Electricity | Laporan Penyata Penggunaan Elektrik</p>
+        </div>
+        <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px;">
+            <h3 style="margin-top: 0; font-size: 14px; color: #4b5563;" id="pdfMetaBulan">Laporan Penggunaan</h3>
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                <tr>
+                    <td style="padding: 6px 0; color: #4b5563;">Jumlah Kuasa Digunakan:</td>
+                    <td style="text-align: right; font-weight: bold;" id="pdfTotalKwh">-</td>
+                </tr>
+                <tr>
+                    <td style="padding: 6px 0; color: #4b5563;">Jumlah Anggaran Kos (DES):</td>
+                    <td style="text-align: right; font-weight: bold; color: #059669;" id="pdfTotalKos">-</td>
+                </tr>
+                <tr>
+                    <td style="padding: 6px 0; color: #4b5563;">Purata Penggunaan / Hari:</td>
+                    <td style="text-align: right; font-weight: bold;" id="pdfAvgKwh">-</td>
+                </tr>
+            </table>
+        </div>
+
+        <div id="pdfGraphSection" style="margin-top: 15px;">
+            <h4 style="font-size: 14px; margin-bottom: 5px;">Graf Analisis Penggunaan Kuasa Harian (kWh):</h4>
+            <div style="text-align: center; width: 100%;">
+                <img id="pdfGraphImage" style="max-width: 100%; height: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 5px;" alt="Usage Chart">
+            </div>
+        </div>
+
+        <div style="page-break-before: auto; margin-top: 15px;">
+            <h4 style="font-size: 14px; margin-bottom: 8px;" id="pdfTableTitle">Pecahan Data Terperinci:</h4>
+            <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: left;">
+                <thead>
+                    <tr style="background-color: #e5e7eb; border-bottom: 1px solid #d1d5db;">
+                        <th style="padding: 8px;" id="pdfThDate">Tarikh / Bulan</th>
+                        <th style="padding: 8px; text-align: right;">Kuasa (kWh)</th>
+                        <th style="padding: 8px; text-align: center;" id="pdfThBlock">Kedudukan Blok DES</th>
+                        <th style="padding: 8px; text-align: right;">Kos Penggunaan</th>
+                    </tr>
+                </thead>
+                <tbody id="pdfTableBody" style="border-bottom: 1px solid #e5e7eb;">
+                    <!-- Rows injected automatically -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Logic Script -->
+    <script>
+        const trackerForm = document.getElementById('trackerForm');
+        const inputDate = document.getElementById('inputDate');
+        const inputKwh = document.getElementById('inputKwh');
+        const monthFilter = document.getElementById('monthFilter');
+        
+        // Stats Elements
+        const statsTitle = document.getElementById('statsTitle');
+        const monthlyTotalKwh = document.getElementById('monthlyTotalKwh');
+        const monthlyTotalCost = document.getElementById('monthlyTotalCost');
+        const monthlyAvgKwh = document.getElementById('monthlyAvgKwh');
+        
+        // Live Tariff Elements
+        const liveB1Usage = document.getElementById('liveB1Usage');
+        const liveB2Usage = document.getElementById('liveB2Usage');
+        const liveB3Usage = document.getElementById('liveB3Usage');
+        const liveB4Usage = document.getElementById('liveB4Usage');
+
+        // Live Card & Tag Elements
+        const cardB1 = document.getElementById('cardB1');
+        const cardB2 = document.getElementById('cardB2');
+        const cardB3 = document.getElementById('cardB3');
+        const cardB4 = document.getElementById('cardB4');
+        const tagB1 = document.getElementById('tagB1');
+        const tagB2 = document.getElementById('tagB2');
+        const tagB3 = document.getElementById('tagB3');
+        const tagB4 = document.getElementById('tagB4');
+
+        // View Containers & Tabs
+        const tabGraph = document.getElementById('tabGraph');
+        const tabData = document.getElementById('tabData');
+        const graphContainer = document.getElementById('graphContainer');
+        const dataContainer = document.getElementById('dataContainer');
+        const dataTableBody = document.getElementById('dataTableBody');
+        const clearDataBtn = document.getElementById('clearDataBtn');
+        const exportPdfBtn = document.getElementById('exportPdfBtn');
+
+        // CSV Import Elements
+        const importCsvBtn = document.getElementById('importCsvBtn');
+        const csvFileInput = document.getElementById('csvFileInput');
+
+        // UI PDF Range Elements
+        const pdfExportMode = document.getElementById('pdfExportMode');
+        const pdfRangeInputs = document.getElementById('pdfRangeInputs');
+        const pdfStartMonth = document.getElementById('pdfStartMonth');
+        const pdfEndMonth = document.getElementById('pdfEndMonth');
+
+        // Welcome Page Elements
+        const welcomeModal = document.getElementById('welcomeModal');
+        const closeWelcomeBtn = document.getElementById('closeWelcomeBtn');
+
+        // Backup/Restore Elements
+        const backupBtn = document.getElementById('backupBtn');
+        const restoreBtn = document.getElementById('restoreBtn');
+        const jsonFileInput = document.getElementById('jsonFileInput');
+
+        // Setup Month Filters
+        const today = new Date();
+        const currentYearMonth = today.toISOString().slice(0, 7); 
+        monthFilter.value = currentYearMonth;
+        pdfStartMonth.value = today.getFullYear() + "-01"; 
+        pdfEndMonth.value = currentYearMonth;               
+        inputDate.value = today.toISOString().split('T')[0];
+
+        // DATA PROTECTION KEY (Kekal des_records_v6)
+        let electricityRecords = JSON.parse(localStorage.getItem('des_records_v6')) || [];
+
+        // Welcome Page Trigger
+        window.addEventListener('DOMContentLoaded', () => {
+            let isFirstTime = localStorage.getItem('des_tracker_first_time');
+            if (isFirstTime === null) {
+                welcomeModal.classList.remove('hidden');
+            }
+        });
+
+        closeWelcomeBtn.addEventListener('click', () => {
+            localStorage.setItem('des_tracker_first_time', 'visited');
+            welcomeModal.classList.add('hidden');
+        });
+
+        // BACKUP DATA (JSON FILE EXPORT)
+        backupBtn.addEventListener('click', () => {
+            if (electricityRecords.length === 0) {
+                alert("Tiada data elektrik untuk di-backup bro."); return;
+            }
+            const backupPackage = {
+                version: "DES_v15_Final_Fixed",
+                timestamp: new Date().toISOString(),
+                records: electricityRecords,
+                firstTimeStatus: localStorage.getItem('des_tracker_first_time')
+            };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupPackage));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `DES_Tracker_Backup_${today.toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        });
+
+        // RESTORE DATA (JSON FILE IMPORT)
+        restoreBtn.addEventListener('click', () => jsonFileInput.click());
+        jsonFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const parsedData = JSON.parse(evt.target.result);
+                    if (parsedData.records && Array.isArray(parsedData.records)) {
+                        if (confirm(`Jumpa ${parsedData.records.length} data lama biskita. Mahu overwrite dan pulihkan ke phone ani?`)) {
+                            electricityRecords = parsedData.records;
+                            localStorage.setItem('des_records_v6', JSON.stringify(electricityRecords));
+                            if (parsedData.firstTimeStatus) {
+                                localStorage.setItem('des_tracker_first_time', parsedData.firstTimeStatus);
+                            }
+                            alert("Alhamdulillah, semua data lama biskita berjaya dipulihkan 100%! 🔥");
+                            updateDashboard();
+                        }
+                    } else {
+                        alert("Format fail .json tidak sah. Sila masukkan fail backup DES yang betul.");
+                    }
+                } catch (err) {
+                    alert("Gagal membaca fail backup. Sila pastikan fail tidak rosak.");
+                }
+                jsonFileInput.value = ""; 
+            };
+            reader.readAsText(file);
+        });
+
+        // DES Tariff Cumulative Logic
+        function calculateCostFromKwh(totalKwh) {
+            let tempKwh = totalKwh;
+            let totalCost = 0;
+            if (tempKwh > 0) { let block = Math.min(tempKwh, 600); totalCost += block * 0.01; tempKwh -= block; }
+            if (tempKwh > 0) { let block = Math.min(tempKwh, 1400); totalCost += block * 0.08; tempKwh -= block; }
+            if (tempKwh > 0) { let block = Math.min(tempKwh, 2000); totalCost += block * 0.10; tempKwh -= block; }
+            if (tempKwh > 0) { totalCost += tempKwh * 0.12; }
+            return totalCost;
+        }
+
+        // Fungsi dinamik mengesan Blok Brunei
+        function dapatkanInfoBlok(startKwh, endKwh) {
+            if (startKwh === endKwh || endKwh <= 0) return "-";
+            let blokTerlibat = [];
+            if (startKwh < 600 && endKwh > 0) blokTerlibat.push("B1 ($0.01)");
+            if (startKwh < 2000 && endKwh > 600) blokTerlibat.push("B2 ($0.08)");
+            if (startKwh < 4000 && endKwh > 2000) blokTerlibat.push("B3 ($0.10)");
+            if (endKwh > 4000) blokTerlibat.push("B4 ($0.12)");
+            if (blokTerlibat.length > 1) return blokTerlibat.join(" + ");
+            
+            let singleBlock = blokTerlibat[0];
+            if (singleBlock.startsWith("B1")) return "Blok 1 ($0.01)";
+            if (singleBlock.startsWith("B2")) return "Blok 2 ($0.08)";
+            if (singleBlock.startsWith("B3")) return "Blok 3 ($0.10)";
+            if (singleBlock.startsWith("B4")) return "Blok 4 ($0.12)";
+            return singleBlock || "-";
+        }
+
+        // Fungsi helper format tarikh rasmi Brunei (DD/MM/YYYY)
+        function tukarFormatTarikhBrunei(stringTarikh) {
+            if (!stringTarikh) return "-";
+            let pecahan = stringTarikh.split("-");
+            if (pecahan.length === 3) return `${pecahan[2]}/${pecahan[1]}/${pecahan[0]}`;
+            return stringTarikh;
+        }
+
+        pdfExportMode.addEventListener('change', () => {
+            if (pdfExportMode.value === 'range') {
+                pdfRangeInputs.classList.remove('hidden');
+            } else {
+                pdfRangeInputs.classList.add('hidden');
+            }
+        });
+
+        // Setup ChartJS
+        const ctx = document.getElementById('usageChart').getContext('2d');
+        let usageChart = new Chart(ctx, {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Daily kWh Usage', data: [], borderColor: '#22d3ee', backgroundColor: 'rgba(34, 211, 238, 0.05)', borderWidth: 2, fill: true, tension: 0.2, pointBackgroundColor: '#22d3ee' }] },
+            options: { animation: false, responsive: true, maintainAspectRatio: false, scales: { x: { grid: { color: '#1f2937' }, ticks: { color: '#9ca3af' } }, y: { grid: { color: '#1f2937' }, ticks: { color: '#9ca3af' }, beginAtZero: true } }, plugins: { legend: { display: false } } }
+        });
+
+        function resetGlowCards() {
+            cardB1.className = "p-3 rounded-lg bg-gray-900 border border-gray-800 transition-all duration-300 flex flex-col justify-between h-full";
+            cardB2.className = "p-3 rounded-lg bg-gray-900 border border-gray-800 transition-all duration-300 flex flex-col justify-between h-full";
+            cardB3.className = "p-3 rounded-lg bg-gray-900 border border-gray-800 transition-all duration-300 flex flex-col justify-between h-full";
+            cardB4.className = "p-3 rounded-lg bg-gray-900 border border-gray-800 transition-all duration-300 flex flex-col justify-between h-full";
+            tagB1.classList.add('hidden'); tagB2.classList.add('hidden'); tagB3.classList.add('hidden'); tagB4.classList.add('hidden');
+        }
+
+        function updateDashboard() {
+            const selectedMonth = monthFilter.value;
+            const dateObj = new Date(selectedMonth + "-02"); 
+            const monthName = dateObj.toLocaleString('ms-BN', { month: 'long', year: 'numeric' });
+            statsTitle.innerText = `Rumusan Bulanan (${monthName})`;
+
+            let filteredRecords = electricityRecords.filter(r => r.date.startsWith(selectedMonth));
+            filteredRecords.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            let cumulativeKwh = 0;
+            let labels = [];
+            let chartData = [];
+            dataTableBody.innerHTML = ''; 
+
+            let lastStartKwh = 0;
+            let lastEndKwh = 0;
+
+            filteredRecords.forEach(record => {
+                let kwhHariIni = record.kwh;
+                let startKwh = cumulativeKwh;
+                let costSebelum = calculateCostFromKwh(startKwh);
+                cumulativeKwh += kwhHariIni;
+                let costSelepas = calculateCostFromKwh(cumulativeKwh);
+                let kosHariIni = costSelepas - costSebelum;
+                let statusBlok = dapatkanInfoBlok(startKwh, cumulativeKwh);
+
+                lastStartKwh = startKwh; lastEndKwh = cumulativeKwh;
+                labels.push(record.date.split('-')[2]); chartData.push(kwhHariIni);
+
+                let badgeColor = "bg-cyan-950/60 text-cyan-400 border-cyan-800/50";
+                if(statusBlok.includes("Blok 2")) badgeColor = "bg-amber-950/60 text-amber-400 border-amber-800/50";
+                if(statusBlok.includes("Blok 3")) badgeColor = "bg-orange-950/60 text-orange-400 border-orange-800/50";
+                if(statusBlok.includes("Blok 4")) badgeColor = "bg-red-950/60 text-red-400 border-red-800/50";
+                if(statusBlok.includes("+")) badgeColor = "bg-indigo-950/70 text-indigo-300 border-indigo-700/60 font-bold";
+
+                let row = `
+                    <tr class="hover:bg-gray-800/40 transition-colors">
+                        <td class="px-6 py-4 font-medium">${tukarFormatTarikhBrunei(record.date)}</td>
+                        <td class="px-6 py-4 text-right text-gray-100 font-semibold">${kwhHariIni.toFixed(3)} kWh</td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="px-2.5 py-1 text-xs font-medium rounded-md border ${badgeColor}">
+                                ${statusBlok}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-right text-emerald-400 font-semibold">$${kosHariIni.toFixed(2)}</td>
+                    </tr>
+                `;
+                dataTableBody.innerHTML += row;
+            });
+
+            let recordCount = filteredRecords.length;
+            let avgKwh = recordCount > 0 ? (cumulativeKwh / recordCount) : 0;
+            let totalCumulativeCost = calculateCostFromKwh(cumulativeKwh);
+
+            monthlyTotalKwh.innerHTML = `${cumulativeKwh.toFixed(3)} <span class="text-xs text-gray-400 font-normal">kWh</span>`;
+            monthlyTotalCost.innerText = `BND $${totalCumulativeCost.toFixed(2)}`;
+            monthlyAvgKwh.innerText = `${avgKwh.toFixed(3)} kWh`;
+
+            let b1Used = Math.min(cumulativeKwh, 600);
+            let b2Used = cumulativeKwh > 600 ? Math.min(cumulativeKwh - 600, 1400) : 0;
+            let b3Used = cumulativeKwh > 2000 ? Math.min(cumulativeKwh - 2000, 2000) : 0;
+            let b4Used = cumulativeKwh > 4000 ? (cumulativeKwh - 4000) : 0;
+
+            liveB1Usage.innerText = `Digunakan: ${b1Used.toFixed(1)} / 600.0 kWh`;
+            liveB2Usage.innerText = `Digunakan: ${b2Used.toFixed(1)} / 1400.0 kWh`;
+            liveB3Usage.innerText = `Digunakan: ${b3Used.toFixed(1)} / 2000.0 kWh`;
+            liveB4Usage.innerText = `Digunakan: ${b4Used.toFixed(1)} kWh`;
+
+            resetGlowCards();
+            if (recordCount > 0) {
+                if (lastStartKwh < 600 && lastEndKwh > 0) { cardB1.classList.add('glow-active-b1', 'bg-cyan-950/20'); tagB1.classList.remove('hidden'); }
+                if (lastStartKwh < 2000 && lastEndKwh > 600) { cardB2.classList.add('glow-active-b2', 'bg-amber-950/10'); tagB2.classList.remove('hidden'); }
+                if (lastStartKwh < 4000 && lastEndKwh > 2000) { cardB3.classList.add('glow-active-b3', 'bg-orange-950/10'); tagB3.classList.remove('hidden'); }
+                if (lastEndKwh > 4000) { cardB4.classList.add('glow-active-b4', 'bg-red-950/10'); tagB4.classList.remove('hidden'); }
+            } else {
+                cardB1.classList.add('glow-active-b1', 'bg-cyan-950/20'); tagB1.classList.remove('hidden');
+            }
+
+            usageChart.data.labels = labels;
+            usageChart.data.datasets[0].data = chartData;
+            usageChart.update();
+        }
+
+        function standardiseDate(dateStr) {
+            let cleanStr = dateStr.trim().replace(/["']/g, "");
+            if (cleanStr.match(/^\d{4}[-/]\d{1,2}[-/]\d{1,2}$/)) {
+                let parts = cleanStr.split(/[-/]/);
+                return `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+            }
+            if (cleanStr.match(/^\d{1,2}[-/]\d{1,2}[-/]\d{4}$/)) {
+                let parts = cleanStr.split(/[-/]/);
+                return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            }
+            return null;
+        }
+
+        importCsvBtn.addEventListener('click', () => csvFileInput.click());
+        csvFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const text = evt.target.result;
+                const lines = text.split(/\r?\n/);
+                let importCount = 0;
+                for (let i = 1; i < lines.length; i++) {
+                    let line = lines[i].trim();
+                    if (!line) continue;
+                    let delimiter = line.includes(';') ? ';' : ',';
+                    const columns = line.split(delimiter);
+                    if (columns.length >= 2) {
+                        let rawDate = columns[0].trim();
+                        let rawKwh = columns[1].trim().replace(/["']/g, "");
+                        let cleanDate = standardiseDate(rawDate);
+                        let kwhVal = parseFloat(rawKwh);
+                        if (cleanDate && !isNaN(kwhVal)) {
+                            const existingIndex = electricityRecords.findIndex(r => r.date === cleanDate);
+                            if (existingIndex !== -1) { electricityRecords[existingIndex].kwh = kwhVal; } 
+                            else { electricityRecords.push({ date: cleanDate, kwh: kwhVal }); }
+                            importCount++;
+                        }
+                    }
+                }
+                localStorage.setItem('des_records_v6', JSON.stringify(electricityRecords));
+                alert(`Berjaya import ${importCount} data harian dari Google Sheets!`);
+                if(electricityRecords.length > 0) {
+                    electricityRecords.sort((a, b) => new Date(a.date) - new Date(b.date));
+                    monthFilter.value = electricityRecords[electricityRecords.length - 1].date.slice(0,7);
+                }
+                updateDashboard();
+                csvFileInput.value = ""; 
+            };
+            reader.readAsText(file);
+        });
+
+        trackerForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const dateVal = inputDate.value;
+            const kwhVal = parseFloat(inputKwh.value);
+            const existingIndex = electricityRecords.findIndex(r => r.date === dateVal);
+            if (existingIndex !== -1) { electricityRecords[existingIndex].kwh = kwhVal; } 
+            else { electricityRecords.push({ date: dateVal, kwh: kwhVal }); }
+            localStorage.setItem('des_records_v6', JSON.stringify(electricityRecords));
+            inputKwh.value = '';
+            monthFilter.value = dateVal.slice(0,7);
+            updateDashboard();
+        });
+
+        clearDataBtn.addEventListener('click', () => {
+            if(confirm('Padam semua rekod data yang disimpan?')) {
+                electricityRecords = [];
+                localStorage.removeItem('des_records_v6');
+                updateDashboard();
+            }
+        });
+
+        monthFilter.addEventListener('change', updateDashboard);
+
+        exportPdfBtn.addEventListener('click', () => {
+            const mode = pdfExportMode.value;
+            const pdfTableBody = document.getElementById('pdfTableBody');
+            pdfTableBody.innerHTML = '';
+            let totalKuasaSemua = 0; let totalKosSemua = 0; let totalHariSemua = 0;
+            let filename = "DES-Electricity-Report";
+
+            if (mode === 'single') {
+                document.getElementById('pdfGraphSection').style.display = 'block';
+                document.getElementById('pdfThBlock').style.display = 'table-cell';
+                document.getElementById('pdfThDate').innerText = "Tarikh";
+                document.getElementById('pdfTableTitle').innerText = "Pecahan Data Harian:";
+
+                const selectedMonth = monthFilter.value;
+                let filteredRecords = electricityRecords.filter(r => r.date.startsWith(selectedMonth));
+                filteredRecords.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                if(filteredRecords.length === 0) { alert('Tiada data direkodkan pada bulan ini untuk dicetak.'); return; }
+                document.getElementById('pdfGraphImage').src = usageChart.toBase64Image();
+
+                let cumulativeKwh = 0;
+                filteredRecords.forEach(r => {
+                    let startKwh = cumulativeKwh;
+                    let costSebelum = calculateCostFromKwh(startKwh);
+                    cumulativeKwh += r.kwh;
+                    let costSelepas = calculateCostFromKwh(cumulativeKwh);
+                    let kosHariIni = costSelepas - costSebelum;
+                    let statusBlok = dapatkanInfoBlok(startKwh, cumulativeKwh);
+
+                    let pdfBadgeStyle = "background-color: #ecfeff; color: #0891b2; border: 1px solid #c5f6fa;"; 
+                    if(statusBlok.includes("Blok 2")) pdfBadgeStyle = "background-color: #fef3c7; color: #d97706; border: 1px solid #fde68a;"; 
+                    if(statusBlok.includes("Blok 3")) pdfBadgeStyle = "background-color: #ffedd5; color: #ea580c; border: 1px solid #fed7aa;"; 
+                    if(statusBlok.includes("Blok 4")) pdfBadgeStyle = "background-color: #fee2e2; color: #dc2626; border: 1px solid #fecaca;"; 
+                    if(statusBlok.includes("+"))      pdfBadgeStyle = "background-color: #e0e7ff; color: #4f46e5; border: 1px solid #c7d2fe; font-weight: bold;"; 
+
+                    pdfTableBody.innerHTML += `
+                        <tr style="border-bottom: 1px solid #e5e7eb;">
+                            <td style="padding: 8px;">${tukarFormatTarikhBrunei(r.date)}</td>
+                            <td style="padding: 8px; text-align: right; font-weight: bold;">${r.kwh.toFixed(3)} kWh</td>
+                            <td style="padding: 8px; text-align: center;">
+                                <span style="padding: 3px 8px; font-size: 10px; border-radius: 4px; display: inline-block; ${pdfBadgeStyle}">${statusBlok}</span>
+                            </td>
+                            <td style="padding: 8px; text-align: right; font-weight: bold; color: #059669;">$${kosHariIni.toFixed(2)}</td>
+                        </tr>
+                    `;
+                    totalKosSemua += kosHariIni;
+                });
+                totalKuasaSemua = cumulativeKwh; totalHariMuat = filteredRecords.length;
+                filename = `DES-PowerTracker-Report-${selectedMonth}.pdf`;
+                const dateObj = new Date(selectedMonth + "-02");
+                document.getElementById('pdfMetaBulan').innerText = `Laporan Bulan: ${dateObj.toLocaleString('ms-BN', { month: 'long', year: 'numeric' })}`;
+
+            } else {
+                document.getElementById('pdfGraphSection').style.display = 'none'; 
+                document.getElementById('pdfThBlock').style.display = 'none';      
+                document.getElementById('pdfThDate').innerText = "Bulan / Tahun";
+                document.getElementById('pdfTableTitle').innerText = "Rumusan Penyata Mengikut Bulan:";
+
+                const start = pdfStartMonth.value; const end = pdfEndMonth.value;     
+                if (!start || !end || start > end) { alert('Sila pilih tempoh bulan mula dan tamat yang betul.'); return; }
+
+                let senaraiBulan = [];
+                let current = new Date(start + "-02"); let endDate = new Date(end + "-02");
+                while (current <= endDate) { senaraiBulan.push(current.toISOString().slice(0, 7)); current.setMonth(current.getMonth() + 1); }
+
+                let adaData = false;
+                senaraiBulan.forEach(bln => {
+                    let recordsBulanIni = electricityRecords.filter(r => r.date.startsWith(bln));
+                    if (recordsBulanIni.length > 0) {
+                        adaData = true; recordsBulanIni.sort((a, b) => new Date(a.date) - new Date(b.date));
+                        let kwhBulanIni = 0; recordsBulanIni.forEach(r => kwhBulanIni += r.kwh);
+                        let kosBulanIni = calculateCostFromKwh(kwhBulanIni);
+                        totalKuasaSemua += kwhBulanIni; totalKosSemua += kosBulanIni; totalHariSemua += recordsBulanIni.length;
+                        let dObj = new Date(bln + "-02"); let namaBulanLabel = dObj.toLocaleString('ms-BN', { month: 'long', year: 'numeric' });
+
+                        pdfTableBody.innerHTML += `
+                            <tr style="border-bottom: 1px solid #e5e7eb; font-size: 13px;">
+                                <td style="padding: 10px; font-weight: 500;">${namaBulanLabel} (${recordsBulanIni.length} Hari)</td>
+                                <td style="padding: 10px; text-align: right; font-weight: bold;">${kwhBulanIni.toFixed(3)} kWh</td>
+                                <td style="padding: 10px; text-align: right; font-weight: bold; color: #059669;">$${kosBulanIni.toFixed(2)}</td>
+                            </tr>
+                        `;
+                    }
+                });
+                if(!adaData) { alert('Tiada sebarang rekod dijumpai dalam tempoh bulan yang dipilih.'); return; }
+                filename = `DES-PowerTracker-MultiMonth-${start}-to-${end}.pdf`;
+                document.getElementById('pdfMetaBulan').innerText = `Laporan Tempoh Bulan: ${start} hingga ${end}`;
+            }
+
+            let avgKwhSemua = totalHariSemua > 0 ? (totalKuasaSemua / totalHariSemua) : 0;
+            document.getElementById('pdfTotalKwh').innerText = `${totalKuasaSemua.toFixed(3)} kWh`;
+            document.getElementById('pdfTotalKos').innerText = `BND $${totalKosSemua.toFixed(2)}`;
+            document.getElementById('pdfAvgKwh').innerText = `${avgKwhSemua.toFixed(3)} kWh / Hari`;
+
+            const element = document.getElementById('pdfTemplate');
+            element.classList.remove('hidden');
+            const opt = { margin: 10, filename: filename, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+            html2pdf().set(opt).from(element).save().then(() => { element.classList.add('hidden'); });
+        });
+
+        tabGraph.addEventListener('click', () => {
+            tabGraph.className = "px-6 py-3 border-b-2 border-cyan-400 text-cyan-400 font-medium text-sm focus:outline-none";
+            tabData.className = "px-6 py-3 border-b-2 border-transparent text-gray-400 hover:text-gray-200 font-medium text-sm focus:outline-none";
+            graphContainer.classList.remove('hidden'); dataContainer.classList.add('hidden');
+        });
+        tabData.addEventListener('click', () => {
+            tabData.className = "px-6 py-3 border-b-2 border-cyan-400 text-cyan-400 font-medium text-sm focus:outline-none";
+            tabGraph.className = "px-6 py-3 border-b-2 border-transparent text-gray-400 hover:text-gray-200 font-medium text-sm focus:outline-none";
+            dataContainer.classList.remove('hidden'); graphContainer.classList.add('hidden');
+        });
+
+        updateDashboard();
+    </script>
+</body>
+</html>
